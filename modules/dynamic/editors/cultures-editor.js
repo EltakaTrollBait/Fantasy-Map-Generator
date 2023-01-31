@@ -228,6 +228,7 @@ function culturesEditorAddLines() {
           style="width: 5em">${si(population)}</div>
         <span data-tip="Click to re-generate names for burgs with this culture assigned" class="icon-arrows-cw hide"></span>
         ${getShapeOptions(selectShape, c.shield)}
+        <span data-tip="Lock culture" class="icon-lock${c.lock ? "" : "-open"} hide"></span>
         <span data-tip="Remove culture" class="icon-trash-empty hide"></span>
       </div>`;
   }
@@ -250,13 +251,15 @@ function culturesEditorAddLines() {
   $body.querySelectorAll("fill-box").forEach($el => $el.on("click", cultureChangeColor));
   $body.querySelectorAll("div > input.cultureName").forEach($el => $el.on("input", cultureChangeName));
   $body.querySelectorAll("div > span.icon-cw").forEach($el => $el.on("click", cultureRegenerateName));
-  $body.querySelectorAll("div > input.cultureExpan").forEach($el => $el.on("input", cultureChangeExpansionism));
+  $body.querySelectorAll("div > input.cultureExpan").forEach($el => $el.on("change", cultureChangeExpansionism));
   $body.querySelectorAll("div > select.cultureType").forEach($el => $el.on("change", cultureChangeType));
   $body.querySelectorAll("div > select.cultureBase").forEach($el => $el.on("change", cultureChangeBase));
   $body.querySelectorAll("div > select.cultureEmblems").forEach($el => $el.on("change", cultureChangeEmblemsShape));
   $body.querySelectorAll("div > div.culturePopulation").forEach($el => $el.on("click", changePopulation));
   $body.querySelectorAll("div > span.icon-arrows-cw").forEach($el => $el.on("click", cultureRegenerateBurgs));
   $body.querySelectorAll("div > span.icon-trash-empty").forEach($el => $el.on("click", cultureRemovePrompt));
+  $body.querySelectorAll("div > span.icon-lock").forEach($el => $el.on("click", updateLockStatus));
+  $body.querySelectorAll("div > span.icon-lock-open").forEach($el => $el.on("click", updateLockStatus));
 
   const $culturesHeader = byId("culturesHeader");
   $culturesHeader.querySelector("div[data-sortby='emblems']").style.display = selectShape ? "inline-block" : "none";
@@ -630,7 +633,7 @@ function togglePercentageMode() {
 
 async function showHierarchy() {
   if (customization) return;
-  const HeirarchyTree = await import("../hierarchy-tree.js?v=1.87.01");
+  const HeirarchyTree = await import("../hierarchy-tree.js?v=1.88.06");
 
   const getDescription = culture => {
     const {name, type, rural, urban} = culture;
@@ -663,17 +666,10 @@ async function showHierarchy() {
 function recalculateCultures(must) {
   if (!must && !culturesAutoChange.checked) return;
 
-  pack.cells.culture = new Uint16Array(pack.cells.i.length);
-  pack.cultures.forEach(function (c) {
-    if (!c.i || c.removed) return;
-    pack.cells.culture[c.center] = c.i;
-  });
-
   Cultures.expand();
   drawCultures();
   pack.burgs.forEach(b => (b.culture = pack.cells.culture[b.cell]));
   refreshCulturesEditor();
-  document.querySelector("input.cultureExpan").focus(); // to not trigger hotkeys
 }
 
 function enterCultureManualAssignent() {
@@ -927,4 +923,16 @@ async function uploadCulturesData() {
 
   drawCultures();
   refreshCulturesEditor();
+}
+
+function updateLockStatus() {
+  if (customization) return;
+
+  const cultureId = +this.parentNode.dataset.id;
+  const classList = this.classList;
+  const c = pack.cultures[cultureId];
+  c.lock = !c.lock;
+
+  classList.toggle("icon-lock-open");
+  classList.toggle("icon-lock");
 }
