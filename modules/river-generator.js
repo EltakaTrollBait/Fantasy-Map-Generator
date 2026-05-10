@@ -439,7 +439,22 @@ window.Rivers = (function () {
   };
 
   const getName = function (cell) {
-    return Names.getCulture(pack.cells.culture[cell]);
+    const name = Names.getCulture(pack.cells.culture[cell]);
+    const taken = new Set((pack.rivers || []).map(r => r.name).filter(Boolean));
+    if (!taken.has(name)) return name;
+    let n = 2;
+    while (taken.has(`${name} ${toRoman(n)}`)) n++;
+    return `${name} ${toRoman(n)}`;
+  };
+
+  const toRoman = function (num) {
+    const map = [["M", 1000], ["CM", 900], ["D", 500], ["CD", 400], ["C", 100], ["XC", 90],
+                 ["L", 50], ["XL", 40], ["X", 10], ["IX", 9], ["V", 5], ["IV", 4], ["I", 1]];
+    let result = "";
+    for (const [glyph, value] of map) {
+      while (num >= value) { result += glyph; num -= value; }
+    }
+    return result;
   };
 
   // weighted arrays of river type names
