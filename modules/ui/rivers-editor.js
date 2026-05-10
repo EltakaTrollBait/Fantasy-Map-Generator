@@ -215,7 +215,17 @@ function editRiver(id) {
   function changeParent() {
     const r = getRiver();
     r.parent = +this.value;
-    r.basin = pack.rivers.find(river => river.i === r.parent).basin;
+    r.basin = Rivers.getBasin(r.i);
+
+    const stack = pack.rivers.filter(child => child.parent === r.i && child.i !== r.i);
+    while (stack.length) {
+      const child = stack.pop();
+      child.basin = Rivers.getBasin(child.i);
+      for (const grand of pack.rivers) {
+        if (grand.parent === child.i && grand.i !== child.i) stack.push(grand);
+      }
+    }
+
     byId("riverBasin").value = pack.rivers.find(river => river.i === r.basin).name;
   }
 
