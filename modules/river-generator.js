@@ -504,9 +504,16 @@ window.Rivers = (function () {
     pack.rivers = pack.rivers.filter(r => !riversToRemove.includes(r.i));
   };
 
-  const getBasin = function (r) {
+  const getParent = function (r) {
     const parent = pack.rivers.find(river => river.i === r)?.parent;
-    if (!parent || r === parent) return r;
+    if (!parent || parent === r) return r;
+    if (!pack.rivers.some(river => river.i === parent)) return r;
+    return parent;
+  };
+
+  const getBasin = function (r) {
+    const parent = getParent(r);
+    if (parent === r) return r;
     return getBasin(parent);
   };
 
@@ -523,6 +530,7 @@ window.Rivers = (function () {
     specify,
     getName,
     getType,
+    getParent,
     getBasin,
     getWidth,
     getOffset,
